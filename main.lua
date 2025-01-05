@@ -62,6 +62,9 @@ local function formatNumber(number)
 	return string.format("%.2f%s", number, suffixes[suffixIndex])
 end
 
+local message = require(game.ReplicatedStorage.Library.Client.Message)
+message.Error("Loading Script...")
+
 local HttpService = game:GetService("HttpService")
 
 -- Generate a timestamped 32-character nonce
